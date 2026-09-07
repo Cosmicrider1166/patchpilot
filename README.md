@@ -498,7 +498,28 @@ The resulting Pull Request can then be reviewed by a human developer.
 
 PatchPilot has also been tested against a multi-file Node.js repair scenario.
 
-In this workflow, Claude identified that the issue required changes across multiple source files. PatchPilot:
+### Demo Repository
+
+```text
+Cosmicrider1166/patchpilot-multifile-demo
+```
+
+### GitHub Issue
+
+```text
+#1 — Fix total calculation and formatting
+```
+
+The issue required the `calculateTotal` workflow to:
+
+- Add two numbers.
+- Return the result formatted with exactly two decimal places.
+- Return `30.00` for `calculateTotal(10, 20)`.
+- Avoid modifying test files.
+
+### Result
+
+PatchPilot successfully:
 
 ```text
 GitHub Issue
@@ -507,13 +528,13 @@ Solari sandbox
      ↓
 Repository analysis
      ↓
-Test failure
+Failing tests
      ↓
 Claude investigation
      ↓
 Structured multi-file repair
      ↓
-Two source files changed
+2 source files changed
      ↓
 Tests passed
      ↓
@@ -528,7 +549,31 @@ Remote commit verification
 Pull Request
 ```
 
-The important property of this workflow is that PatchPilot did not simply accept the AI-generated changes. It verified the resulting repository state and test results before creating the Pull Request.
+The repair completed in:
+
+```text
+1 attempt
+```
+
+Resulting commit:
+
+```text
+41aa9c95bc95d3ffdd6af781c6bb47e14a706f64
+```
+
+Repair branch:
+
+```text
+patchpilot/issue-1-20260907-125817
+```
+
+Pull Request:
+
+```text
+#2
+```
+
+The resulting Pull Request was created for human review after the tests and Git safety checks passed.
 
 ---
 
@@ -629,10 +674,30 @@ PatchPilot/
 │   ├── project.py
 │   ├── safety.py
 │   ├── solari.py
-│   ├── tests.py
-│   └── test_*.py
+│   └── tests.py
 │
 ├── tests/
+│   ├── test_agent.py
+│   ├── test_agent_structured.py
+│   ├── test_claude.py
+│   ├── test_context.py
+│   ├── test_dependencies.py
+│   ├── test_github.py
+│   ├── test_github_branch.py
+│   ├── test_github_commit.py
+│   ├── test_github_pr.py
+│   ├── test_github_push.py
+│   ├── test_github_repair.py
+│   ├── test_github_solari.py
+│   ├── test_github_structured_repair.py
+│   ├── test_issue_claude.py
+│   ├── test_issues.py
+│   ├── test_openai.py
+│   ├── test_project.py
+│   ├── test_safety.py
+│   ├── test_solari.py
+│   ├── test_test_results.py
+│   ├── test_tests.py
 │   ├── test_base_branch.py
 │   ├── test_cli.py
 │   ├── test_commit_verification.py
