@@ -6,6 +6,27 @@ The goal is simple:
 
 > **Turn a GitHub Issue into a verified Pull Request while keeping execution isolated and changes tightly controlled.**
 
+## 🚀 End-to-End Demo
+
+PatchPilot has been demonstrated on a real multi-file Node.js repair workflow.
+
+The demo shows the complete pipeline:
+
+**GitHub Issue → Solari Sandbox → Claude Code → Repair → Tests → Git Safety → Commit → Push → Pull Request**
+
+[**View the complete end-to-end demo →**](demo/README.md)
+
+The demo includes screenshots of the actual successful execution, including:
+
+- GitHub Issue
+- PatchPilot project detection and initial failing tests
+- Claude-generated multi-file repair
+- Passing tests and Git safety validation
+- Commit and Pull Request creation
+
+---
+
+
 ---
 
 ## Workflow
