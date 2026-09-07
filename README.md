@@ -2,13 +2,19 @@
 
 PatchPilot is an autonomous GitHub Issue repair agent that investigates failing software projects, modifies source code inside an isolated Solari sandbox, verifies the repair with the project's test suite, and creates a GitHub Pull Request.
 
+The goal is simple:
+
+> **Turn a GitHub Issue into a verified Pull Request while keeping execution isolated and changes tightly controlled.**
+
+---
+
 ## Workflow
 
 ```text
 GitHub Issue
      │
      ▼
-PatchPilot
+ PatchPilot
      │
      ▼
 Solari Sandbox
@@ -20,38 +26,40 @@ Solari Sandbox
      ├── Select relevant context
      ├── Install dependencies
      └── Run tests
-             │
-             ▼
+              │
+              ▼
         Claude Code
-             │
-             ├── Investigate failure
-             └── Generate structured repair
-             │
-             ▼
-        Apply source changes
-             │
-             ▼
+              │
+              ├── Investigate failure
+              └── Generate structured repair
+              │
+              ▼
+      Apply source changes
+              │
+              ▼
         Run tests again
-             │
-        ┌────┴────┐
-        │         │
-      FAIL      PASS
-        │         │
-      Retry       ▼
-               Git safety
-                  │
-                  ▼
-               Commit
-                  │
-                  ▼
-                Push
-                  │
-                  ▼
-           Verify remote commit
-                  │
-                  ▼
+              │
+         ┌────┴────┐
+         │         │
+       FAIL      PASS
+         │         │
+       Retry       ▼
+              Git safety
+                   │
+                   ▼
+                 Commit
+                   │
+                   ▼
+                  Push
+                   │
+                   ▼
+          Verify remote commit
+                   │
+                   ▼
            GitHub Pull Request
 ```
+
+---
 
 ## What PatchPilot Does
 
@@ -83,12 +91,15 @@ PatchPilot automates the repetitive parts of a software-maintenance workflow:
 
 PatchPilot is deliberately conservative: if the repair cannot be verified safely, it does not create a Pull Request.
 
+---
+
 ## Architecture
 
 The project is divided into focused modules:
 
 ```text
 app/
+
 ├── agent.py      # Claude Code integration and response validation
 ├── config.py     # Runtime configuration and validation
 ├── context.py    # Relevant-file selection and context budgeting
@@ -100,6 +111,8 @@ app/
 ├── solari.py     # Solari sandbox operations
 └── tests.py      # Test discovery, commands and result parsing
 ```
+
+---
 
 ## Supported Projects
 
@@ -115,6 +128,8 @@ PatchPilot currently supports:
 | Rust | `Cargo.toml` | Cargo | Cargo |
 
 Test discovery supports language-specific conventions including Python, JavaScript, Java, Go, and Rust test filenames.
+
+---
 
 ## Claude Code Integration
 
@@ -148,6 +163,8 @@ Validation includes:
 - Maximum generated-code size
 - Semantic repair validation
 
+---
+
 ## Context Management
 
 PatchPilot does not blindly send an entire repository to Claude.
@@ -172,6 +189,8 @@ Maximum characters per file
 
 This keeps prompts focused and predictable.
 
+---
+
 ## Multi-File Repairs
 
 A repair can modify multiple source files when necessary.
@@ -183,11 +202,15 @@ PatchPilot validates that:
 - Test files were not modified.
 - The Git diff contains exactly the expected repair files.
 
+This allows Claude to make coordinated changes across multiple source files while preventing unrelated modifications.
+
+---
+
 ## Safety
 
 PatchPilot includes multiple safety layers.
 
-### Test protection
+### Test Protection
 
 Claude is prevented from targeting test files such as:
 
@@ -202,7 +225,9 @@ Test*.java
 *_test.rs
 ```
 
-### Path validation
+Tests are treated as validation infrastructure rather than repair targets.
+
+### Path Validation
 
 Unsafe paths such as these are rejected:
 
@@ -214,7 +239,9 @@ C:\file.py
 \\server\file.py
 ```
 
-### Git diff validation
+PatchPilot only allows valid repository-relative source paths.
+
+### Git Diff Validation
 
 Before committing, PatchPilot verifies:
 
@@ -223,17 +250,19 @@ Before committing, PatchPilot verifies:
 - Test files were not modified.
 - The diff contains the expected files.
 
-### Branch verification
+### Branch Verification
 
 The repository's base branch is verified immediately after cloning before a repair branch is created.
 
-### Commit verification
+### Commit Verification
 
 After committing, PatchPilot verifies that `HEAD` matches the expected commit hash.
 
-### Remote verification
+### Remote Verification
 
 After pushing, PatchPilot verifies that the remote branch points to the same commit.
+
+---
 
 ## Retry System
 
@@ -263,31 +292,43 @@ Default:
 3 attempts
 ```
 
+A failed repair attempt is not blindly reused. The repository is reset and the current state is re-evaluated before another repair is generated.
+
+---
+
 ## Configuration
 
 Current defaults are:
 
 ```text
 Repository path:
+
     /work/patchpilot
 
 Base branch:
+
     master
 
 Maximum repair attempts:
+
     3
 
 Maximum context files:
+
     20
 
 Maximum total context characters:
+
     30000
 
 Maximum characters per file:
+
     12000
 ```
 
 These values can be overridden from the command line.
+
+---
 
 ## Installation
 
@@ -317,6 +358,8 @@ Authenticate GitHub CLI:
 gh auth login
 ```
 
+---
+
 ## Environment Variables
 
 PatchPilot requires credentials for the external services it uses.
@@ -341,6 +384,8 @@ $env:GITHUB_TOKEN = (gh auth token)
 
 Never commit API keys, tokens, or other credentials to the repository.
 
+---
+
 ## Usage
 
 Basic usage:
@@ -355,7 +400,7 @@ Example:
 python app\main.py Cosmicrider1166/patchpilot-demo 4
 ```
 
-### Runtime options
+### Runtime Options
 
 Maximum repair attempts:
 
@@ -383,6 +428,8 @@ python app\main.py OWNER/REPOSITORY ISSUE_NUMBER --max-file-context-chars 8000
 
 Invalid configuration values are rejected before the PatchPilot workflow begins.
 
+---
+
 ## Testing
 
 Run the complete test suite with:
@@ -392,13 +439,15 @@ $env:PYTHONPATH="$PWD\app"
 python -m pytest -q
 ```
 
-The current regression baseline is:
+Current regression baseline:
 
 ```text
 60 passed
 ```
 
 The project may display deprecation warnings from the Solari dependency stack. These warnings originate from external dependencies and are separate from PatchPilot test failures.
+
+---
 
 ## Example
 
@@ -443,35 +492,79 @@ PatchPilot can:
 
 The resulting Pull Request can then be reviewed by a human developer.
 
+---
+
+## Demonstrated Multi-File Repair
+
+PatchPilot has also been tested against a multi-file Node.js repair scenario.
+
+In this workflow, Claude identified that the issue required changes across multiple source files. PatchPilot:
+
+```text
+GitHub Issue
+     ↓
+Solari sandbox
+     ↓
+Repository analysis
+     ↓
+Test failure
+     ↓
+Claude investigation
+     ↓
+Structured multi-file repair
+     ↓
+Two source files changed
+     ↓
+Tests passed
+     ↓
+Diff safety validation
+     ↓
+Commit
+     ↓
+Push
+     ↓
+Remote commit verification
+     ↓
+Pull Request
+```
+
+The important property of this workflow is that PatchPilot did not simply accept the AI-generated changes. It verified the resulting repository state and test results before creating the Pull Request.
+
+---
+
 ## Design Principles
 
-### Verify, don't assume
+### Verify, Don't Assume
 
-AI-generated code is never considered correct simply because Claude produced it. The repository's tests must validate the repair.
+AI-generated code is never considered correct simply because Claude produced it.
 
-### Minimize changes
+The repository's tests must validate the repair.
+
+### Minimize Changes
 
 Claude is instructed to make the smallest source changes necessary.
 
-### Protect tests
+### Protect Tests
 
 Tests are treated as validation infrastructure rather than repair targets.
 
-### Isolate execution
+### Isolate Execution
 
 Repository execution takes place inside a Solari sandbox.
 
-### Bound AI context
+### Bound AI Context
 
 Repository context is selected and size-limited before being sent to Claude.
 
-### Verify Git state
+### Verify Git State
 
 Branches, changed files, diffs, commits, and remote state are explicitly checked.
 
-### Fail safely
+### Fail Safely
 
 If a repair cannot be verified, PatchPilot fails rather than creating an unverified Pull Request.
+
+---
 
 ## Current Status
 
@@ -479,45 +572,87 @@ PatchPilot currently implements an end-to-end autonomous software-repair workflo
 
 ```text
 GitHub Issue
-    ↓
+     ↓
 Issue Analysis
-    ↓
+     ↓
 Isolated Solari Sandbox
-    ↓
+     ↓
 Repository Clone
-    ↓
+     ↓
 Base Branch Verification
-    ↓
+     ↓
 Project Detection
-    ↓
+     ↓
 Test Detection
-    ↓
+     ↓
 Dependency Installation
-    ↓
+     ↓
 Test Execution
-    ↓
+     ↓
 Context Selection
-    ↓
+     ↓
 Claude Investigation
-    ↓
+     ↓
 Structured Repair
-    ↓
+     ↓
 Repair Validation
-    ↓
+     ↓
 Source Changes
-    ↓
+     ↓
 Test Verification
-    ↓
+     ↓
 Retry if Necessary
-    ↓
+     ↓
 Git Diff Safety
-    ↓
+     ↓
 Commit Verification
-    ↓
+     ↓
 Remote Verification
-    ↓
+     ↓
 Pull Request
 ```
+
+---
+
+## Project Structure
+
+```text
+PatchPilot/
+│
+├── app/
+│   ├── agent.py
+│   ├── config.py
+│   ├── context.py
+│   ├── github.py
+│   ├── issues.py
+│   ├── main.py
+│   ├── project.py
+│   ├── safety.py
+│   ├── solari.py
+│   ├── tests.py
+│   └── test_*.py
+│
+├── tests/
+│   ├── test_base_branch.py
+│   ├── test_cli.py
+│   ├── test_commit_verification.py
+│   ├── test_config.py
+│   ├── test_github_reset.py
+│   ├── test_go_support.py
+│   ├── test_java_support.py
+│   ├── test_pr_safety.py
+│   ├── test_remote_commit.py
+│   ├── test_retry_exhaustion.py
+│   ├── test_retry_reset.py
+│   └── test_rust_support.py
+│
+├── .gitignore
+├── LICENSE
+├── README.md
+└── requirements.txt
+```
+
+---
 
 ## Limitations
 
@@ -535,6 +670,8 @@ Current limitations include:
 
 The system intentionally prefers a failed repair over an unsafe or unverified Pull Request.
 
+---
+
 ## Future Improvements
 
 Potential future improvements include:
@@ -551,6 +688,8 @@ Potential future improvements include:
 - Human approval workflows
 - Repair-quality evaluation
 - Parallel issue processing
+
+---
 
 ## License
 
