@@ -1,8 +1,6 @@
 # PatchPilot End-to-End Demo
 
-This document demonstrates a real end-to-end PatchPilot repair workflow.
-
-The demonstration uses a deliberately broken Node.js project and a GitHub Issue describing the expected behavior.
+This document demonstrates a real end-to-end PatchPilot repair workflow using a deliberately broken Node.js project and a GitHub Issue.
 
 PatchPilot autonomously investigates the issue, executes the project inside an isolated Solari sandbox, uses Claude Code to generate a repair, validates the repair with the project's tests, verifies the Git changes, and creates a GitHub Pull Request.
 
@@ -14,13 +12,13 @@ Repository:
 
 `Cosmicrider1166/patchpilot-multifile-demo`
 
-Pull Request:
-
-`#2 — Fix total calculation and formatting`
-
 Issue:
 
 `#1 — Fix total calculation and formatting`
+
+Pull Request:
+
+`#2 — Fix total calculation and formatting`
 
 ---
 
@@ -36,6 +34,10 @@ The GitHub Issue specifies that:
 - Test files must not be modified.
 
 The repository intentionally contains incorrect source behavior.
+
+### GitHub Issue
+
+![GitHub Issue](screenshots/01-github-issue.png)
 
 ---
 
@@ -156,8 +158,12 @@ The workflow then verifies that the repository is on the expected base branch be
 The repair branch generated for this run was:
 
 ```text
-patchpilot/issue-1-20260907-125817
+patchpilot/issue-1-20260907-220009
 ```
+
+### PatchPilot Startup and Project Detection
+
+![PatchPilot startup and project detection](screenshots/02-patchpilot-start.png)
 
 ---
 
@@ -259,7 +265,12 @@ The repair is rejected if it violates the safety rules.
 
 This demonstration specifically verifies that PatchPilot can handle repairs involving multiple source files.
 
-Claude selected the source files that required changes.
+Claude selected the source files that required changes:
+
+```text
+calculator.js
+formatter.js
+```
 
 The final repair changed:
 
@@ -270,6 +281,10 @@ The final repair changed:
 PatchPilot did not allow arbitrary repository modifications.
 
 Only the files expected by the repair were permitted to change.
+
+### Claude Repair, Test Success, and Git Validation
+
+![Repair and validation](screenshots/03-repair-and-validation.png)
 
 ---
 
@@ -310,6 +325,16 @@ The system checks that:
 
 This provides an additional safety boundary between AI-generated code and the final Pull Request.
 
+The successful run reported:
+
+```text
+Modified: ['calculator.js', 'formatter.js']
+Untracked: []
+Diff additions: 2
+Diff deletions: 2
+Git diff safety check passed.
+```
+
 ---
 
 ## Step 11 — Commit
@@ -319,7 +344,7 @@ After the tests and Git safety checks pass, PatchPilot commits the repair.
 The resulting commit was:
 
 ```text
-41aa9c95bc95d3ffdd6af781c6bb47e14a706f64
+bde0aa819bd65f6435c1f86ec3d2e9c120ef29a7
 ```
 
 PatchPilot then verifies the local commit hash.
@@ -331,7 +356,7 @@ PatchPilot then verifies the local commit hash.
 The repair branch is pushed to GitHub:
 
 ```text
-patchpilot/issue-1-20260907-125817
+patchpilot/issue-1-20260907-220009
 ```
 
 PatchPilot also verifies that the remote branch points to the expected commit.
@@ -345,10 +370,14 @@ PatchPilot creates a GitHub Pull Request from the repair branch into the reposit
 The resulting Pull Request is:
 
 ```text
-#2
+#3
 ```
 
-It contains the automated workflow summary, validation information, repair attempt count, and commit information.
+### Final Pull Request Creation
+
+![Pull Request creation](screenshots/04-pull-request.png)
+
+The Pull Request contains the automated workflow summary, validation information, repair attempt count, and commit information.
 
 ---
 
@@ -388,6 +417,12 @@ Push
 Remote commit verification
      ↓
 GitHub Pull Request
+```
+
+The final Pull Request created by this run was:
+
+```text
+https://github.com/Cosmicrider1166/patchpilot-multifile-demo/pull/3
 ```
 
 ---
